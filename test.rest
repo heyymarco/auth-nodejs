@@ -1,0 +1,47 @@
+### access public resource:
+GET http://localhost:3001/posts
+
+
+
+### access protected resource without cred:
+GET http://localhost:3001/protected-posts
+
+
+
+### login
+POST http://localhost:3001/login
+Content-Type: application/json
+
+{
+    "username": "Nuzz"
+}
+
+
+
+### refresh token
+POST http://localhost:3001/refresh
+Content-Type: application/json
+
+{
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiTnV6eiIsIm1ldGEiOnsiZ2VuZGVyIjoibWFsZSJ9LCJpYXQiOjE2NzI5Njc1ODN9.hK-k_DE-8_yLOVZQE9adh5e1VWE19jlgu4Wg4gUyIzc"
+}
+
+
+
+### access protected resource with invalid cred:
+GET http://localhost:3001/protected-posts
+Authorization: Bearer wrongFalseNullwrongFalseNullwrongFalseNull.wrongFalseNullwrongFalseNullwrongFalseNull.wrongFalseNullwrongFalseNullwrongFalseNull
+
+### access protected resource with valid cred:
+GET http://localhost:3001/protected-posts
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiTnV6eiIsIm1ldGEiOnsiZ2VuZGVyIjoibWFsZSJ9LCJpYXQiOjE2NzI5NjcyMDksImV4cCI6MTY3Mjk2NzIzOX0.raN6wy5GDlcdpQCZe-u9SYy6CuuCxrBd1T1vB_0P0P8
+
+
+
+### logout
+DELETE http://localhost:3001/logout
+Content-Type: application/json
+
+{
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiTnV6eiIsIm1ldGEiOnsiZ2VuZGVyIjoibWFsZSJ9LCJpYXQiOjE2NzI5Njc1ODN9.hK-k_DE-8_yLOVZQE9adh5e1VWE19jlgu4Wg4gUyIzc"
+}
