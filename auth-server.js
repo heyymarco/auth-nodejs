@@ -1,10 +1,12 @@
-import dotenv from "dotenv";
-import express from "express";
-import jwt from "jsonwebtoken";
+import dotenv from 'dotenv';
+import express from 'express';
+import jwt from 'jsonwebtoken';
 import cors from 'cors'
+import cookieParser from 'cookie-parser'
 import morgan from 'morgan';
-import credentials from "./credentials.js";
-import corsOptions from "./corsOptions.js";
+
+import credentials from './credentials.js';
+import corsOptions from './corsOptions.js';
 
 
 dotenv.config();
@@ -26,6 +28,7 @@ app
 .use(express.json())
 .use(credentials) // before CORS!
 .use(cors(corsOptions))
+.use(cookieParser())
 .use(morgan('combined'))
 ;
 
@@ -34,7 +37,7 @@ app.get('/posts', (req, res) => {
         hello: 'everyone'
     });
 });
-app.get('/protected-posts', authenticateAccessToken, (req, res) => {
+app.delete('/post', authenticateAccessToken, (req, res) => {
     const decoded = req[decodedKey];
     const {
         username,
@@ -47,8 +50,7 @@ app.get('/protected-posts', authenticateAccessToken, (req, res) => {
     
     
     res.json({
-        post: posts.filter((p) => p.username === username),
-        by: decoded
+        message: `deleted by: ${username}`
     });
 });
 
@@ -57,7 +59,7 @@ app.post('/login', (req, res) => {
     
     
     
-    const [accessToken]  = generateAccessToken(username, ['admin']);
+    const [accessToken]  = generateAccessToken(username);
     
     const [refreshToken, refreshTokenExpires] = generateRefreshToken(username);
     refreshTokens.push(refreshToken);
@@ -91,10 +93,13 @@ app.delete('/logout', (req, res) => {
 
 
 
-function generateAccessToken(username, roles, expiresInSeconds = 30) {
+function getUserRoles(username) {
+    return ['admin'];
+}
+function generateAccessToken(username, expiresInSeconds = 30) {
     return [
             jwt.sign(
-            { username, roles },
+            { username, roles: getUserRoles(username) },
             process.env.ACCESS_TOKEN_SECRET,
             { expiresIn: expiresInSeconds }
         ),
@@ -130,7 +135,7 @@ function generateRefreshToken(username, expiresInSeconds = (24 * 60 * 60)) {
 }
 function authenticateRefreshToken(req, res, next) {
     const token = req.cookies?.[refreshTokenKey];
-    console.log(req.cookies);
+    console.log('token: ', token);
     if (!token) return res.sendStatus(401); // Unauthorized
     
     
@@ -141,14 +146,8 @@ function authenticateRefreshToken(req, res, next) {
         
         
         
-        const {
-            username,
-            roles,
-            meta,
-            
-            iat, exp,
-        } = decoded;
-        const accessToken = generateAccessToken(username);
+        const { username } = decoded;
+        const [accessToken] = generateAccessToken(username);
         
         
         
