@@ -23,7 +23,7 @@ POST http://localhost:3001/refresh
 Content-Type: application/json
 
 {
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiTnV6eiIsIm1ldGEiOnsiZ2VuZGVyIjoibWFsZSJ9LCJpYXQiOjE2NzI5Njc1ODN9.hK-k_DE-8_yLOVZQE9adh5e1VWE19jlgu4Wg4gUyIzc"
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Ik51enoiLCJpYXQiOjE2NzMxMDA3NDJ9.VOsjt-V24JPCoEBwIpOWtSgxk0NGVIge6tnV60W4yG0"
 }
 
 
@@ -34,7 +34,7 @@ Authorization: Bearer wrongFalseNullwrongFalseNullwrongFalseNull.wrongFalseNullw
 
 ### access protected resource with valid cred:
 GET http://localhost:3001/protected-posts
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Ik51enoiLCJyb2xlIjpbImFkbWluIl0sImlhdCI6MTY3MzA2MzU2OSwiZXhwIjoxNjczMDYzNTk5fQ.EnvwjkYkOCYxnhOFwM20FpUU09oPUXJcOqb2VZYqPno
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Ik51enoiLCJyb2xlcyI6WyJhZG1pbiJdLCJpYXQiOjE2NzMxMDA3NDIsImV4cCI6MTY3MzEwMDc3Mn0.eXpxfgsrtIJR3agtIUEun8Mjiza8veszOXf9iKzJhsY
 
 
 

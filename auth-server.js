@@ -10,7 +10,7 @@ import corsOptions from "./corsOptions.js";
 dotenv.config();
 
 
-const userDataKey = Symbol();
+const decodedKey = Symbol();
 
 
 const posts = [
@@ -34,43 +34,36 @@ app.get('/posts', (req, res) => {
     });
 });
 app.get('/protected-posts', authenticateAccessToken, (req, res) => {
-    const userDataEx = req[userDataKey];
+    const decoded = req[decodedKey];
     const {
         username,
         roles,
         meta,
         
         iat, exp,
-    } = userDataEx;
+    } = decoded;
     
     
     
     res.json({
         post: posts.filter((p) => p.username === username),
-        by: userDataEx
+        by: decoded
     });
 });
 
 app.post('/login', (req, res) => {
     const { username } = req.body;
-    const roles = ['admin'];
-    const userData = {
-        username,
-        roles,
-    };
     
     
     
-    const accessToken = generateAccessToken(userData);
+    const accessToken  = generateAccessToken(username, ['admin']);
     
-    const refreshToken = generateRefreshToken(userData);
+    const refreshToken = generateRefreshToken(username);
     refreshTokens.push(refreshToken);
     
     res.json({
         accessToken,
         refreshToken,
-        username,
-        roles,
     });
 });
 
@@ -92,8 +85,8 @@ app.delete('/logout', (req, res) => {
 
 
 
-function generateAccessToken(userData) {
-    return jwt.sign(userData, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '30s' });
+function generateAccessToken(username, roles) {
+    return jwt.sign({ username, roles }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '30s' });
 }
 function authenticateAccessToken(req, res, next) {
     const auth = req.headers['authorization'];
@@ -102,18 +95,18 @@ function authenticateAccessToken(req, res, next) {
     
     
     
-    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (error, userDataEx) => {
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (error, decoded) => {
         if (error) return res.sendStatus(403); // Forbidden
         
         
         
-        req[userDataKey] = userDataEx;
+        req[decodedKey] = decoded;
         next();
     });
 }
 
-function generateRefreshToken(userData) {
-    return jwt.sign(userData, process.env.REFRESH_TOKEN_SECRET);
+function generateRefreshToken(username) {
+    return jwt.sign({ username }, process.env.REFRESH_TOKEN_SECRET);
 }
 function authenticateRefreshToken(req, res, next) {
     const token = req.body.token;
@@ -122,7 +115,7 @@ function authenticateRefreshToken(req, res, next) {
     
     
     if (!refreshTokens.includes(token)) return res.sendStatus(403); // Forbidden
-    jwt.verify(token, process.env.REFRESH_TOKEN_SECRET, (error, userDataEx) => {
+    jwt.verify(token, process.env.REFRESH_TOKEN_SECRET, (error, decoded) => {
         if (error) return res.sendStatus(403); // Forbidden
         
         
@@ -133,13 +126,8 @@ function authenticateRefreshToken(req, res, next) {
             meta,
             
             iat, exp,
-        } = userDataEx;
-        const userData = {
-            username,
-            roles,
-            meta,
-        };
-        const accessToken = generateAccessToken(userData);
+        } = decoded;
+        const accessToken = generateAccessToken(username);
         
         
         
