@@ -1,6 +1,10 @@
 import dotenv from "dotenv";
 import express from "express";
 import jwt from "jsonwebtoken";
+import cors from 'cors'
+import morgan from 'morgan';
+import credentials from "./credentials.js";
+import corsOptions from "./corsOptions.js";
 
 
 dotenv.config();
@@ -17,7 +21,12 @@ const posts = [
 const refreshTokens = [];
 
 const app = express();
-app.use(express.json());
+app
+.use(express.json())
+.use(credentials) // before CORS!
+.use(cors(corsOptions))
+.use(morgan('combined'))
+;
 
 app.get('/posts', (req, res) => {
     res.json({
@@ -27,7 +36,8 @@ app.get('/posts', (req, res) => {
 app.get('/protected-posts', authenticateAccessToken, (req, res) => {
     const userDataEx = req[userDataKey];
     const {
-        name,
+        username,
+        roles,
         meta,
         
         iat, exp,
@@ -36,18 +46,17 @@ app.get('/protected-posts', authenticateAccessToken, (req, res) => {
     
     
     res.json({
-        post: posts.filter((p) => p.username === name),
+        post: posts.filter((p) => p.username === username),
         by: userDataEx
     });
 });
 
 app.post('/login', (req, res) => {
     const { username } = req.body;
+    const roles = ['admin'];
     const userData = {
-        name: username,
-        meta: {
-            gender: 'male'
-        },
+        username,
+        roles,
     };
     
     
@@ -60,6 +69,8 @@ app.post('/login', (req, res) => {
     res.json({
         accessToken,
         refreshToken,
+        username,
+        roles,
     });
 });
 
@@ -81,8 +92,8 @@ app.delete('/logout', (req, res) => {
 
 
 
-function generateAccessToken(user) {
-    return jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '30s' });
+function generateAccessToken(userData) {
+    return jwt.sign(userData, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '30s' });
 }
 function authenticateAccessToken(req, res, next) {
     const auth = req.headers['authorization'];
@@ -101,8 +112,8 @@ function authenticateAccessToken(req, res, next) {
     });
 }
 
-function generateRefreshToken(user) {
-    return jwt.sign(user, process.env.REFRESH_TOKEN_SECRET);
+function generateRefreshToken(userData) {
+    return jwt.sign(userData, process.env.REFRESH_TOKEN_SECRET);
 }
 function authenticateRefreshToken(req, res, next) {
     const token = req.body.token;
@@ -117,13 +128,15 @@ function authenticateRefreshToken(req, res, next) {
         
         
         const {
-            name,
+            username,
+            roles,
             meta,
             
             iat, exp,
         } = userDataEx;
         const userData = {
-            name,
+            username,
+            roles,
             meta,
         };
         const accessToken = generateAccessToken(userData);

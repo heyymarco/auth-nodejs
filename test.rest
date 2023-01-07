@@ -34,7 +34,7 @@ Authorization: Bearer wrongFalseNullwrongFalseNullwrongFalseNull.wrongFalseNullw
 
 ### access protected resource with valid cred:
 GET http://localhost:3001/protected-posts
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiTnV6eiIsIm1ldGEiOnsiZ2VuZGVyIjoibWFsZSJ9LCJpYXQiOjE2NzI5NjcyMDksImV4cCI6MTY3Mjk2NzIzOX0.raN6wy5GDlcdpQCZe-u9SYy6CuuCxrBd1T1vB_0P0P8
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Ik51enoiLCJyb2xlIjpbImFkbWluIl0sImlhdCI6MTY3MzA2MzU2OSwiZXhwIjoxNjczMDYzNTk5fQ.EnvwjkYkOCYxnhOFwM20FpUU09oPUXJcOqb2VZYqPno
 
 
 
