@@ -18,13 +18,9 @@ Content-Type: application/json
 
 
 
-### refresh token
+### refresh token with http_only cookie
 POST http://localhost:3001/refresh
 Content-Type: application/json
-
-{
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Ik51enoiLCJpYXQiOjE2NzMxMDA3NDJ9.VOsjt-V24JPCoEBwIpOWtSgxk0NGVIge6tnV60W4yG0"
-}
 
 
 

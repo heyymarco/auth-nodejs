@@ -11,6 +11,7 @@ dotenv.config();
 
 
 const decodedKey = Symbol();
+const refreshTokenKey = 'refreshToken';
 
 
 const posts = [
@@ -56,18 +57,23 @@ app.post('/login', (req, res) => {
     
     
     
-    const accessToken  = generateAccessToken(username, ['admin']);
+    const [accessToken]  = generateAccessToken(username, ['admin']);
     
-    const refreshToken = generateRefreshToken(username);
+    const [refreshToken, refreshTokenExpires] = generateRefreshToken(username);
     refreshTokens.push(refreshToken);
     
+    res.cookie(refreshTokenKey, refreshToken, {
+        httpOnly : true,
+        sameSite : 'None',
+        secure   : true,
+        maxAge   : refreshTokenExpires * 1000
+    });
     res.json({
         accessToken,
-        refreshToken,
     });
 });
 
-app.post('/refresh', authenticateRefreshToken);
+app.get('/refresh', authenticateRefreshToken);
 
 app.delete('/logout', (req, res) => {
     const token = req.body.token;
@@ -85,8 +91,15 @@ app.delete('/logout', (req, res) => {
 
 
 
-function generateAccessToken(username, roles) {
-    return jwt.sign({ username, roles }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '30s' });
+function generateAccessToken(username, roles, expiresInSeconds = 30) {
+    return [
+            jwt.sign(
+            { username, roles },
+            process.env.ACCESS_TOKEN_SECRET,
+            { expiresIn: expiresInSeconds }
+        ),
+        expiresInSeconds,
+    ];
 }
 function authenticateAccessToken(req, res, next) {
     const auth = req.headers['authorization'];
@@ -105,11 +118,19 @@ function authenticateAccessToken(req, res, next) {
     });
 }
 
-function generateRefreshToken(username) {
-    return jwt.sign({ username }, process.env.REFRESH_TOKEN_SECRET);
+function generateRefreshToken(username, expiresInSeconds = (24 * 60 * 60)) {
+    return [
+        jwt.sign(
+            { username },
+            process.env.REFRESH_TOKEN_SECRET,
+            { expiresIn: expiresInSeconds }
+        ),
+        expiresInSeconds,
+    ];
 }
 function authenticateRefreshToken(req, res, next) {
-    const token = req.body.token;
+    const token = req.cookies?.[refreshTokenKey];
+    console.log(req.cookies);
     if (!token) return res.sendStatus(401); // Unauthorized
     
     
