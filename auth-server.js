@@ -75,9 +75,9 @@ app.post('/login', (req, res) => {
     });
 });
 
-app.get('/refresh', authenticateRefreshToken);
+app.post('/refresh', authenticateRefreshToken);
 
-app.delete('/logout', (req, res) => {
+app.post('/logout', (req, res) => {
     const token = req.body.token;
     if (token) {
         const index = refreshTokens.findIndex((t) => t === token);
@@ -88,6 +88,11 @@ app.delete('/logout', (req, res) => {
     
     
     
+    res.clearCookie(refreshTokenKey, {
+        httpOnly : true,
+        sameSite : 'None',
+        secure   : true,
+    });
     res.sendStatus(204); // No Content Success, no need to navigate away from its current page
 });
 
