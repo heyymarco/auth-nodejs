@@ -18,6 +18,12 @@ Content-Type: application/json
 
 
 
+### login-github
+GET http://localhost:3001/login/with/github
+Content-Type: application/json
+
+
+
 ### refresh token with http_only cookie
 GET http://localhost:3001/refresh
 Cookie: refreshToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Ik51enoiLCJpYXQiOjE2NzMxMTU1MzcsImV4cCI6MTY3MzIwMTkzN30.eEwtNYonnX7IiVLiwzCSQWdhU4xfoR56-ElfJCcE7JA
