@@ -58,20 +58,35 @@ app.delete('/post', authenticateAccessToken, (req, res) => {
 });
 
 app.post('/login', async (req, res) => {
+    const oauthPkceCode1 = req.cookies?.[oauthPkceKey];
+    res
+    .clearCookie(oauthPkceKey, {
+        httpOnly : true,
+        sameSite : 'none',
+        secure   : true,
+    });
+    
+    
+    
     const { username, password, code, state } = req.body;
     if (code && (typeof(code) === 'string')) {
         try {
+            if (!oauthPkceCode1) {
+                return res.sendStatus(401); // Unauthorized
+            } // if
+            
+            
+            
             const {
                 provider,
-                [oauthPkceKey] : oauthPkceCode1,
+                [oauthPkceKey] : oauthPkceCode2,
             } = JSON.parse(state) ?? {};
-            if (!provider || !oauthPkceCode1) {
+            if (!provider || !oauthPkceCode2) {
                 // console.log('PKCE code missing');
                 return res.sendStatus(401); // Unauthorized
             } // if
             
-            const oauthPkceCode2 = req.cookies?.[oauthPkceKey];
-            if (oauthPkceCode1 !== oauthPkceCode2) {
+            if (oauthPkceCode2 !== oauthPkceCode1) {
                 // console.log('PKCE code mismatch');
                 return res.sendStatus(401); // Unauthorized
             } // if
@@ -83,14 +98,60 @@ app.post('/login', async (req, res) => {
                 const response = await axios.post('https://github.com/login/oauth/access_token', {
                     grant_type    : 'authorization_code',
                     client_id     : process.env.OAUTH_GITHUB_CLIENT_ID,
-                    client_id     : process.env.OAUTH_GITHUB_CLIENT_SECRET,
+                    client_secret : process.env.OAUTH_GITHUB_CLIENT_SECRET,
                     redirect_uri  : 'http://localhost:3000/login',
                     code          : code,
+                }, { headers: { Accept: 'application/json' } });
+                
+                
+                
+                console.log(response.data);
+                const {
+                    token_type    : _token_type,
+                    scope         : _scope,
+                    
+                    expires_in    : refreshTokenExpires = undefined,
+                    access_token  : accessToken,
+                    refresh_token : refreshToken = undefined,
+                    id_token,
+                ...restData} = response.data;
+                
+                if (refreshToken) {
+                    res.cookie(refreshTokenKey, refreshToken, {
+                        httpOnly : true,
+                        sameSite : 'none',
+                        secure   : true,
+                        maxAge   : (typeof(refreshTokenExpires) === 'number') ? (refreshTokenExpires * 1000) : (refreshTokenExpires ?? undefined)
+                    });
+                }
+                else {
+                    res.clearCookie(refreshTokenKey, {
+                        httpOnly : true,
+                        sameSite : 'none',
+                        secure   : true,
+                    });
+                } // if
+                
+                const userInfo = await axios.get('https://api.github.com/user', {
+                    headers : {
+                        Authorization : `Bearer ${accessToken}`,
+                    },
+                });
+                const {
+                    login      : username,
+                    email      : email,
+                    avatar_url : avatar,
+                    name       : nickname,
+                } = userInfo.data;
+                console.log('userInfo', userInfo.data);
+                
+                return res.json({
+                    access_token : accessToken,
                 });
             }
             catch {
                 return res.status(500);
-            }
+            } // try
         }
         catch {
             // console.log('parse error');
@@ -101,6 +162,7 @@ app.post('/login', async (req, res) => {
         
         return;
     } // if
+    
     
     
     const [accessToken]  = generateAccessToken(username);
@@ -129,14 +191,14 @@ app.get('/login/github', (req, res) => {
         httpOnly : true,
         sameSite : 'none',
         secure   : true,
-        maxAge   : 5 * 60 * 1000
+        maxAge   : 10 * 60 * 1000
     })
     .json({
         authUrl : 'https://github.com/login/oauth/authorize?' + (new URLSearchParams({
             response_type : 'code',
             client_id     : process.env.OAUTH_GITHUB_CLIENT_ID,
             redirect_uri  : 'http://localhost:3000/login',
-            scope         : 'user public_repo',
+            scope         : 'read:user user:email',
             state         : JSON.stringify({
                 provider       : 'github',
                 [oauthPkceKey] : oauthPkceCode,
@@ -182,7 +244,7 @@ function generateAccessToken(username, expiresInSeconds = 30) {
     ];
 }
 function authenticateAccessToken(req, res, next) {
-    const auth = req.headers['authorization'];
+    const auth = req.headers['Authorization'];
     const token = auth && auth.split(' ')[1];
     if (!token) return res.sendStatus(401); // Unauthorized
     
