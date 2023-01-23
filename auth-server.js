@@ -9,14 +9,34 @@ import credentials from './credentials.js';
 import corsOptions from './corsOptions.js';
 import {randomBytes} from 'crypto'
 import axios from 'axios'
+import mongoose from 'mongoose'
+import { connectDb } from './dbConn.js'
+
+import User from './models/User.js'
+import bcrypt from 'bcrypt'
+
 
 
 dotenv.config();
 
 
+connectDb();
+mongoose.connection.once('open', async () => {
+    if (!await User.findOne({}).count().exec()) {
+        await User.create({
+            username : 'joko',
+            password : bcrypt.hashSync('111', 10),
+        });
+        console.log('a default user added!');
+    }
+});
+
+
+
 const decodedKey = Symbol();
 const refreshTokenKey = 'refreshToken';
 const oauthPkceKey    = 'oauthPkce';
+
 
 
 const posts = [
@@ -180,6 +200,14 @@ app.post('/login', async (req, res) => {
     
     
     
+    const encPassword = (await User.findOne({username}, {password: 1, _id: 0}).exec()).password;
+    if (!await bcrypt.compare(password, encPassword)) {
+        console.log('password wrong!');
+        return res.sendStatus(401); // Unauthorized
+    } // if
+    console.log('password accepted')
+    
+    
     const [accessToken]  = generateAccessToken(username);
     
     const [refreshToken, refreshTokenExpires] = generateRefreshToken(username);
@@ -311,4 +339,7 @@ function authenticateRefreshToken(req, res, next) {
 }
 
 
-app.listen(3001);
+mongoose.connection.once('open', () => {
+    console.log('connected to MongoDb');
+    app.listen(3001);
+})
