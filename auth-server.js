@@ -103,6 +103,22 @@ app.post('/login', async (req, res) => {
                     code          : code,
                 }, { headers: { Accept: 'application/json' } });
                 
+                // const response2 = await axios.post('https://github.com/login/oauth/refresh_token', {
+                //     grant_type    : 'refresh_token',
+                //     client_id     : process.env.OAUTH_GITHUB_CLIENT_ID,
+                //     client_secret : process.env.OAUTH_GITHUB_CLIENT_SECRET,
+                //     // redirect_uri  : 'http://localhost:3000/login',
+                //     refresh_token : '1234abcde',
+                // }, { headers: { Accept: 'application/json' } });
+                /*
+                    {
+                        access_token  : 'BWjcyMzY3ZDhiNmJkNTY',
+                        refresh_token : 'Srq2NjM5NzA2OWJjuE7c',
+                        token_type    : 'Bearer',
+                        expires       : 3600
+                    }
+                */
+                
                 
                 
                 console.log(response.data);
@@ -110,7 +126,7 @@ app.post('/login', async (req, res) => {
                     token_type    : _token_type,
                     scope         : _scope,
                     
-                    expires_in    : refreshTokenExpires = undefined,
+                    expires_in    : accessTokenExpires = undefined,
                     access_token  : accessToken,
                     refresh_token : refreshToken = undefined,
                     id_token,
@@ -121,7 +137,6 @@ app.post('/login', async (req, res) => {
                         httpOnly : true,
                         sameSite : 'none',
                         secure   : true,
-                        maxAge   : (typeof(refreshTokenExpires) === 'number') ? (refreshTokenExpires * 1000) : (refreshTokenExpires ?? undefined)
                     });
                 }
                 else {
